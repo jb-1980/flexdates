@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/flexdates_dashboard/db" VERSION="20140912" COMMENT="XMLDB file for Moodle local/flexdates_dashboard"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="local_fd_student_due_dates" COMMENT="due dates for individual students on assigned grade_items">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="id of user from user table"/>
+        <FIELD NAME="gradeitemid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="id of associated grade_item id"/>
+        <FIELD NAME="duedate" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="due date of an individual grade_item for the user"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="uniqueduedate" TYPE="unique" FIELDS="userid, gradeitemid" COMMENT="ensure that there is only one gradeitem per user"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="local_fd_trackcourse" COMMENT="Boolean to determine whether or not a course should display a report for flexdates">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="id of course to track"/>
+        <FIELD NAME="track" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="to track or not to track, that is the question"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="uniquecourseid" TYPE="unique" FIELDS="courseid" COMMENT="ensure that there is only one record per course"/>
+      </KEYS>
+    </TABLE>
+  </TABLES>
+</XMLDB>
