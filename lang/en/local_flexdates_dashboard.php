@@ -24,10 +24,23 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+$string['allassignments']='All Assignments';
+$string['assignment'] = 'Assignment';
+$string['completiondate'] = 'Completion Date';
+$string['course'] = 'Course';
+$string['dashboard'] = 'Dashboard';
+$string['daysincourse'] = 'Days in Course';
+$string['duedate'] = 'Due Date';
 $string['flexdatessettings'] = 'Flex Dates Settings';
+$string['grade'] = 'Grade';
+$string['pastdueassignments']='Past Due';
 $string['pluginname']='Flex Dates Dashboard';
+$string['progress']='Progress';
+$string['projectedcompletiondate']='Projected Completion Date';
+$string['rawgrade']='Raw Grade';
 $string['trackcourse']='Track Course';
 $string['trackcourse_help']='Select whether or not to include this course in the flexdates progress reports';
+$string['upcomingassignments']='Upcoming Assignments';
 
 
 

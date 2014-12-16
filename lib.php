@@ -67,17 +67,36 @@ function local_flexdates_dashboard_extends_settings_navigation(settings_navigati
  * @return array
  */
 function flexdates_get_tracked_courses($userid){
-    global $DB;
-    $courses = enrol_get_users_courses($userid, true, 'summary', $sort = 'visible DESC,sortorder ASC');
-    foreach($courses as $id=>$course){
+    global $DB,$CFG;
+    $records = enrol_get_users_courses($userid, true, 'summary', $sort = 'visible DESC,sortorder ASC');
+    $courses = new stdClass;
+    $courses->active = array();
+    $courses->resources = array();
+    foreach($records as $id=>$course){
         if($record = $DB->get_record('local_fd_trackcourse',array('courseid'=>$course->id))){
             if($record->track){
-                continue;
+                $sql = "SELECT ue.timestart 
+                          FROM {$CFG->prefix}user_enrolments ue
+                          JOIN {$CFG->prefix}enrol e ON e.id=ue.enrolid 
+                         WHERE e.enrol = 'manual'
+                               AND e.courseid = {$course->id}
+                               AND ue.userid = {$userid};";
+                $enrol_record = $DB->get_record_sql($sql, array(), $strictness=MUST_EXIST);
+                $data = new stdClass;
+                $data->id  = $course->id;
+                $data->title = $course->shortname;
+                $data->name = $course->fullname;
+                $data->summary = $course->summary;
+                $data->startdate = $enrol_record->timestart;
+                $data->grades = flexdates_get_student_grades($course->id,$userid);
+                $courses->active[$data->id] = $data;
             } else{
-                unset($courses[$id]);
+                $data = new stdClass;
+                $data->id = $course->id;
+                $data->title = $course->shortname;
+                $data->summary = $course->summary;
+                $courses->resources[] = $data;
             }
-        } else{
-            unset($courses[$id]);
         }
     }
     return $courses;
@@ -560,32 +579,27 @@ function flexdates_get_raw_grade($courseid,$grade_items){
  * @param int $startdate the beginning date in unix timestamp
  * @param int $enddate the ending date in unix timestamp
  * @param array $excluded_dates array of dates not to include in count
- * @return array of available dates
+ * @return array of available dates as unix timestamps
  */
 function flexdates_get_available_due_dates($startdate, $enddate, $excluded_dates){
     $start = DateTime::createFromFormat('U', $startdate);
     $end = DateTime::createFromFormat('U', $enddate);
     $oneday = new DateInterval("P1D");
 
-    $days = array();
-
     /* Iterate from $start up to $end+1 day, one day in each iteration.
     We add one day to the $end date, because the DatePeriod only iterates up to,
     not including, the end date. */
     $dates = new DatePeriod($start, $oneday, $end->add($oneday));
-    //print_object($dates);
-    $counter = 0;
-    foreach($dates as $day) {
-        //print_object($day);
-        if(!in_array($day->getTimestamp(),$excluded_dates)){
-            //echo 'In array<br/>';
+    
+    // Create a bucket of days with day[0] = today, day[1]=next school day, etc.
+    foreach($dates as $day){
+        if(!in_array($day,$excluded_dates)){
             if($day->format("N") < 6) { /* weekday */
                 $days[] = $day->getTimestamp();
-                $counter ++;
             }
         }
     }
-    //print_object($days);
+
     return $days;
 }
 
@@ -640,7 +654,22 @@ function flexdates_get_days_in_semester($startdate,$enddate,$excluded_dates = ar
 
 /**
  * find the project completion date based on work done and work to do
+ * the idea is that all work should be completed in $sem_length, and each task
+ * should take up a portion of that time. So we will sum up the normalized time
+ * for each task, and project that total time as the amount of time left for 
+ * expected course completion.
  *
+ * NOTE: This can have an error as big as the longest lesson duration value,
+ * i.e. if there are only three tasks, and each are given 2 months to complete
+ * then for every x days into the 2 month period, this will project a completion
+ * date of x days behind the actual date up to 2 months when the assignment is due,
+ * at which point it will be correct once more. Thus, it should be encouraged to
+ * make the tasks more atomic to better reflect the individual tasks expected in a larger assignment
+ *
+ * @param array $lessondurations array of lessonduration objects
+ * @param int $sem_length number of school days between start to end dates
+ * @param array $excluded_dates array of unix timestamps for dates that are not school days or weekends, i.e. spring break, christmas, etc.
+ * @return DateTime object
  */
 function flexdates_get_projected_completion_date($lessondurations,$sem_length,$excluded_dates=array()){
     // Sum all lesson duration values
@@ -648,11 +677,12 @@ function flexdates_get_projected_completion_date($lessondurations,$sem_length,$e
     foreach($lessondurations as $item){
         $total_duration += $item->duration;
     }
-   
+    
     // create bucket of available dates for next 36 weeks
     $today = time();
     $future = $today + 21772800*2; // Get dates for next 36 weeks
     $school_days = flexdates_get_available_due_dates($today, $future, $excluded_dates);
+    
     // Normalize due dates for ungraded assignments and sum them up
     $time_total = 0;
     foreach($lessondurations as $item){
@@ -734,22 +764,28 @@ function flexdates_update_student_due_dates($userid,$courseid,$lessondurations,$
  */
 function flexdates_find_amount_behind($percomplete,$perexpected){
     if($percomplete == 0 and $perexpected == 0){
+        // Boostrap success state
         return array(0,'#5CB85C','#4CAE4C');
     }
     $diff = ($percomplete - $perexpected);
     if(abs($diff) < 0.03){
+        // Boostrap success state
         return array($diff,'#5CB85C','#4CAE4C');
     }
     if($diff < 0){
         if($diff < -0.1){
+            // Bootstrap danger state
             return array($diff,'#D9534F','#D43F3A');
         } else{
+            // Bootstrap warning state
             return array($diff,'#F0AD4E','#EEA236');
         }
     } else{
         if($diff > 0.1){
+            // Boostrap primary state
             return array($diff,'#428BCA','#357EBD');
         } else{
+            // Boostrap success state
             return array($diff,'#5CB85C','#4CAE4C');
         }
     }
@@ -786,6 +822,15 @@ function flexdates_parametize_arc($x,$y,$radius,$start_angle,$end_angle,$radians
     return $d;
 }
 
+function flexdates_make_anglelist($num_assign,$completed,$mastered,$expected,$course_grade){
+    $per_complete = $num_assign ? $completed/$num_assign : 0;
+    $per_master = $num_assign ? $mastered/$num_assign : 0;
+    $per_expected = $num_assign ? $expected/$num_assign : 0;
+    $grade_graph = new stdClass;
+    $grade_graph->anglelist = array($per_master,$per_complete,$per_expected);
+    $grade_graph->course_grade = $course_grade;
+    return $grade_graph;
+}
 /**
  * Used to create an svg graphic of the grade with completion/mastery percentages encircling it
  * @param array $anglelist a two element array of decimals between 0 and 1, like ($mastery_percent,$completion_percent)
@@ -821,7 +866,13 @@ function flexdates_makesvg($anglelist, $grade, $cx = 100, $cy = 100, $radius=95)
     return $graph;
 }
 
+/**
+ * filter students
+ *
+ */
+function flexdates_filter_students($teacher=null,$advisor=null,$site=null,$course=null){
 
+}
 
 /**
  * Used to transform a coursename to a html element id
@@ -847,6 +898,36 @@ function flexdates_sort_array_by_sortorder($item1, $item2) {
 }
 
 /**
+ * This function is called by 'usort' method to sort objects in array by property 'sortorder'
+ *
+ * @param grade_item $item1 object 1 to compare
+ * @param grade_item $item2 object 2 to compare with object 1
+ */
+function flexdates_sort_array_by_lastname($item1, $item2) {
+    if ($item1->lastname == $item2->lastname) {
+        return 0;
+    }
+
+    return ($item1->lastname < $item2->lastname) ? -1 : 1;
+}
+
+/**
+ * This function is called by 'usort' method to sort objects in array by property 'sortorder'
+ *
+ * @param grade_item $item1 object 1 to compare
+ * @param grade_item $item2 object 2 to compare with object 1
+ */
+function flexdates_sort_array_by_duedate($item1, $item2){
+    if($item1->grades->duedate == $item2->grades->duedate){
+        return 0;
+    }
+
+    return ($item1->grades->duedate < $item2->grades->duedate) ? -1 : 1;
+}
+
+
+
+/**
  * This function is called by 'usort' method to sort objects in array by property 'depth'
  *
  * @param grade_item $item1 object 1 to compare
@@ -860,3 +941,117 @@ function flexdates_sort_categories_by_depth($item1, $item2) {
     return ($item1->depth < $item2->depth) ? 1 : -1;
 }
 
+class flexdates_course{
+    /**
+     * @var float the number of assignments completed in a course
+     */
+    public $completed = 0.0;
+    /**
+     * @var float the number of assignments assigned in a course
+     */
+    public $num_assign = 0.0;
+    /**
+     * @var float the number of assignments mastered in a course
+     */
+    public $mastered = 0.0;
+    /**
+     * @var float the number of assignments that are expected
+     * to be completed in a course by a given date
+     */
+    public $expected = 0.0;
+    /**
+     * @var DateTime object the projected date to complete the course;
+     */
+    public $projected_completion_date = null;
+    /**
+     * @var DateTime object the assigned date the user is expected to complete the course by
+     */
+    public $completion_date = null;
+    /**
+     * @var int number of seconds between projected and expected completion dates.
+     */
+    public $date_diff = null;
+    /**
+     * @var float a number between 0 and 100 representing the accumulated grade
+     */
+    public $raw_grade = 0.0;
+    /**
+     * @var str a URL, html class, and html id friendly version of the course name
+     */
+    public $link = '';
+    /**
+     * @var int the number os school days in the course
+     */
+    public $days_in_course = 0;
+    /**
+     * @var str the A-F representation of the course grade
+     */
+    public $course_grade = '';
+    public $id = null;
+    public $title = null;
+    public $name = null;
+    public $summary = null;
+    public $grades = null;
+    public $userid = null;
+    
+    public function __construct($data,$userid){
+        $this->id  = $data->id;
+        $this->title = $data->title;
+        $this->name = $data->name;
+        $this->summary = $data->summary;
+        $this->startdate = $data->startdate;
+        $this->grades = flexdates_get_student_grades($data->id,$userid);
+        $this->userid = $userid;
+        $this->set_properties($data);
+    }
+    
+    public function set_properties($data){
+        global $DB;
+        $today = new DateTime();
+        usort($data->grades->items,'flexdates_sort_array_by_sortorder');
+        $lessondurations = new stdClass;
+        foreach($data->grades->items as $assignment){
+            $grades = $assignment->grades;
+            if($assignment->itemtype == 'course'){
+                $this->course_grade = $grades->str_grade;
+                continue;
+            } else if($assignment->itemtype == 'category'){
+                continue;
+            } else{
+                $item_id = $assignment->id;
+                $lessondurations->$item_id = new stdClass;
+                $lessondurations->$item_id->duration = $assignment->duration;
+                $this->num_assign ++;
+                if($grades->mastered){
+                    $this->completed ++;
+                    $this->mastered ++;
+                    $lessondurations->$item_id->notsubmitted = false;
+                } else if($grades->datesubmitted or $grades->dategraded){
+                    $this->completed ++;
+                    $lessondurations->$item_id->notsubmitted = false;
+                } else{
+                    $lessondurations->$item_id->notsubmitted = true;
+                }
+                if($grades->duedate < $today->getTimestamp()){
+                    $this->expected ++;
+                }
+            }
+        }
+        
+        $this->link = flexdates_string_to_url($this->title);
+        
+        if($completion_record = $DB->get_record('local_fd_completion_dates',array('userid'=>$this->userid,'courseid'=>$this->id))){
+            $sem_length = flexdates_get_days_in_semester($completion_record->startdate,$completion_record->completiondate,$excluded_dates = array());
+            //print_object($sem_length);
+            $this->projected_completion_date = flexdates_get_projected_completion_date($lessondurations,$sem_length,$excluded_dates=array());
+            $this->completion_date = DateTime::createFromFormat('U', $completion_record->completiondate);
+            $this->date_diff = $this->projected_completion_date->getTimestamp()-$this->completion_date->getTimestamp();
+        } else{
+            $this->completion_date = null;
+            $this->projected_completion_date = null;
+            $this->date_diff = 0;
+        }
+        $this->days_in_course = flexdates_get_days_in_course($data->startdate);
+        $this->raw_grade = round(flexdates_get_raw_grade($data->id,$data->grades->items),1);
+    }
+}
