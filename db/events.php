@@ -17,7 +17,7 @@
 /**
  * Event observers definition.
  *
- * @package local_studentdash
+ * @package local_flexdates
  * @category event
  * @copyright 2014 Joseph Gilgen
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,12 +27,22 @@ $observers = array(
 
     array(
         'eventname' => '\core\event\user_enrolment_deleted',
-        'callback' => 'local_flexdates_dashboard_observer::user_enrolment_deleted',
+        'callback' => 'local_flexdates_observer::user_enrolment_deleted',
     ),
     
     array(
-        'eventname' => '\local_flexdates_mod_duration\event\course_module_duration_updated',
-        'callback'  => 'local_flexdates_dashboard_observer::course_module_duration_updated',
+        'eventname' => '\local_flexdates\event\course_module_duration_updated',
+        'callback'  => 'local_flexdates_observer::course_module_duration_updated',
+    ),
+    
+    array(
+        'eventname' => '\core\event\course_module_deleted',
+        'callback' => 'local_flexdates_observer::course_module_deleted',
+    ),
+    
+    array(
+        'eventname' => '\core\event\course_module_created',
+        'callback'  => 'local_flexdates_observer::course_module_created',
     ),
     
 );

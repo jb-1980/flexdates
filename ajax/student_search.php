@@ -26,7 +26,7 @@ if($post){
 function render_list($advisees,$wrapped=false){
     $items = array();
     foreach($advisees as $advisee){
-        $url = new moodle_url('/local/flexdates_dashboard/advisor.php', array('student' => $advisee->id));
+        $url = new moodle_url('/local/flexdates/advisor.php', array('student' => $advisee->id));
         $text = $advisee->firstname.' '.$advisee->lastname;
         $items[] = html_writer::link($url, $text);
     }

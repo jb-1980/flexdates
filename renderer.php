@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Defines the renderer for the flexdates_dashboard plugin.
+ * Defines the renderer for the flexdates plugin.
  *
  * @package    local
- * @subpackage flexdates_dashboard
+ * @subpackage flexdates
  * @copyright  2014 Joseph Gilgen
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -28,12 +28,12 @@ defined('MOODLE_INTERNAL') || die();
 require_once('lib.php');
 
 /**
- * Renderer for the flexdates_dashboard plugin
+ * Renderer for the flexdates plugin
  *
  * @copyright  2014 Joseph Gilgen
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class local_flexdates_dashboard_renderer extends plugin_renderer_base {
+class local_flexdates_renderer extends plugin_renderer_base {
     /**
      * @var int id of user we want to display dashboard of
      */
@@ -84,7 +84,7 @@ class local_flexdates_dashboard_renderer extends plugin_renderer_base {
             //print_object($dashtab_assignments);
             usort($dashtab_assignments,'flexdates_sort_array_by_duedate');
             $dashtab_content = $this->render_dashboard_tabpane('This is where the announcements go!',$dash_tab_data,$dashtab_assignments);
-        $tab_content.= "<div class='tab-pane active' id='flexdates_dashboard'>{$dashtab_content}</div>";
+        $tab_content.= "<div class='tab-pane active' id='flexdates'>{$dashtab_content}</div>";
         $container_content.= $this->render_tab_content($tab_content);
         return $this->render_container_fluid($container_content);
     }
@@ -136,7 +136,7 @@ class local_flexdates_dashboard_renderer extends plugin_renderer_base {
             //print_object($dashtab_assignments);
             usort($dashtab_assignments,'flexdates_sort_array_by_duedate');
             $dashtab_content = $this->render_dashboard_tabpane('This is where the announcements go!',$dash_tab_data,$dashtab_assignments);
-            $tab_content.= "<div class='tab-pane active' id='flexdates_dashboard'>{$dashtab_content}</div>";
+            $tab_content.= "<div class='tab-pane active' id='flexdates'>{$dashtab_content}</div>";
             $dash_content.= $this->render_tab_content($tab_content);
             $output.= $this->render_col_md_x($dash_content,10);
         } else{
@@ -217,7 +217,7 @@ class local_flexdates_dashboard_renderer extends plugin_renderer_base {
             //print_object($dashtab_assignments);
             usort($dashtab_assignments,'flexdates_sort_array_by_duedate');
             $dashtab_content = $this->render_dashboard_tabpane('This is where the announcements go!',$dash_tab_data,$dashtab_assignments);
-            $tab_content.= "<div class='tab-pane active' id='flexdates_dashboard'>{$dashtab_content}</div>";
+            $tab_content.= "<div class='tab-pane active' id='flexdates'>{$dashtab_content}</div>";
             $dash_content.= $this->render_tab_content($tab_content);
             $output.= $this->render_col_md_x($dash_content,10);
         } else{
@@ -256,13 +256,13 @@ class local_flexdates_dashboard_renderer extends plugin_renderer_base {
         $table = new html_table();
         $table->attributes['class'] = 'table';
         $table->head = array(
-            get_string('course','local_flexdates_dashboard').' '.html_writer::span('',"glyphicon glyphicon-question-sign",array('data-toggle'=>'tooltip','data-trigger'=>'click focus hover','title'=>"Link to your courses")),
-            get_string('grade','local_flexdates_dashboard').' '.html_writer::span('',"glyphicon glyphicon-question-sign",array('data-toggle'=>'tooltip','data-trigger'=>'click focus hover','title'=>"Your current grade based on completed work.")),
-            get_string('rawgrade','local_flexdates_dashboard').' '.html_writer::span('',"glyphicon glyphicon-question-sign",array('data-toggle'=>'tooltip','data-trigger'=>'click focus hover','title'=>"This is what your grade would be if all ungraded assignments were counted as 0. It should start at 0 and approach 100 as you get to the end of the course.")),
-            get_string('progress','local_flexdates_dashboard').' '.html_writer::span('',"glyphicon glyphicon-question-sign",array('data-toggle'=>'tooltip','data-trigger'=>'click focus hover','title'=>"The top bar indicates how much you have completed/mastered, and the bottom bar is how much work is expected by today's date.")),
-            get_string('daysincourse','local_flexdates_dashboard').' '.html_writer::span('',"glyphicon glyphicon-question-sign",array('data-toggle'=>'tooltip','data-trigger'=>'click focus hover','title'=>"The number of school days, excluding weekends and holidays, you have been enrolled. If this goes beyond 180 you will be in danger of being dropped from the course with an F.")),
-            get_string('completiondate','local_flexdates_dashboard').' '.html_writer::span('',"glyphicon glyphicon-question-sign",array('data-toggle'=>'tooltip','data-trigger'=>'click focus hover','title'=>"This is the target date by which you should complete all work in the course. Generally, it is 90 school days after enrolment.")),
-            get_string('projectedcompletiondate','local_flexdates_dashboard').' '.html_writer::span('',"glyphicon glyphicon-question-sign",array('data-toggle'=>'tooltip','data-trigger'=>'click focus hover','title'=>"Based on current work completed and pacing, this is the calculated date that you will complete the course by. If it is later than the expected completion date, you should make adjustments to get caught up."))
+            get_string('course','local_flexdates').' '.html_writer::span('',"glyphicon glyphicon-question-sign",array('data-toggle'=>'tooltip','data-trigger'=>'click focus hover','title'=>"Link to your courses")),
+            get_string('grade','local_flexdates').' '.html_writer::span('',"glyphicon glyphicon-question-sign",array('data-toggle'=>'tooltip','data-trigger'=>'click focus hover','title'=>"Your current grade based on completed work.")),
+            get_string('rawgrade','local_flexdates').' '.html_writer::span('',"glyphicon glyphicon-question-sign",array('data-toggle'=>'tooltip','data-trigger'=>'click focus hover','title'=>"This is what your grade would be if all ungraded assignments were counted as 0. It should start at 0 and approach 100 as you get to the end of the course.")),
+            get_string('progress','local_flexdates').' '.html_writer::span('',"glyphicon glyphicon-question-sign",array('data-toggle'=>'tooltip','data-trigger'=>'click focus hover','title'=>"The top bar indicates how much you have completed/mastered, and the bottom bar is how much work is expected by today's date.")),
+            get_string('daysincourse','local_flexdates').' '.html_writer::span('',"glyphicon glyphicon-question-sign",array('data-toggle'=>'tooltip','data-trigger'=>'click focus hover','title'=>"The number of school days, excluding weekends and holidays, you have been enrolled. If this goes beyond 180 you will be in danger of being dropped from the course with an F.")),
+            get_string('completiondate','local_flexdates').' '.html_writer::span('',"glyphicon glyphicon-question-sign",array('data-toggle'=>'tooltip','data-trigger'=>'click focus hover','title'=>"This is the target date by which you should complete all work in the course. Generally, it is 90 school days after enrolment.")),
+            get_string('projectedcompletiondate','local_flexdates').' '.html_writer::span('',"glyphicon glyphicon-question-sign",array('data-toggle'=>'tooltip','data-trigger'=>'click focus hover','title'=>"Based on current work completed and pacing, this is the calculated date that you will complete the course by. If it is later than the expected completion date, you should make adjustments to get caught up."))
         );
         $table->align = array('center','center','center','center','center','center','center');
         foreach($courses_info as $course){
@@ -294,7 +294,7 @@ class local_flexdates_dashboard_renderer extends plugin_renderer_base {
     public function render_advisor_menu($advisees){
         $items = array();
         foreach($advisees as $advisee){
-            $url = new moodle_url('/local/flexdates_dashboard/advisor.php', array('student' => $advisee->id));
+            $url = new moodle_url('/local/flexdates/advisor.php', array('student' => $advisee->id));
             $text = $advisee->firstname.' '.$advisee->lastname;
             $items[] = html_writer::link($url, $text);
         }
@@ -308,7 +308,7 @@ class local_flexdates_dashboard_renderer extends plugin_renderer_base {
     public function render_teacher_menu($students){
         $items = array();
         foreach($students as $student){
-            $url = new moodle_url('/local/flexdates_dashboard/teacher.php', array('student' => $student->id));
+            $url = new moodle_url('/local/flexdates/teacher.php', array('student' => $student->id));
             $text = $student->firstname.' '.$student->lastname;
             $items[] = html_writer::link($url, $text);
         }
@@ -326,7 +326,7 @@ class local_flexdates_dashboard_renderer extends plugin_renderer_base {
      */
     public function render_navtabs($courses) {
         $output = html_writer::start_tag( 'ul', array('class'=>'nav nav-tabs','role'=>'tablist'));
-        $a_content = html_writer::tag('a',get_string('dashboard','local_flexdates_dashboard'),array('href'=>"#flexdates_dashboard",'data-toggle'=>'tab'));
+        $a_content = html_writer::tag('a',get_string('dashboard','local_flexdates'),array('href'=>"#flexdates",'data-toggle'=>'tab'));
         $output.= html_writer::tag('li',$a_content,array('class'=>'active'));
         foreach($courses as $data){
             $link = flexdates_string_to_url($data->title);
@@ -475,9 +475,9 @@ class local_flexdates_dashboard_renderer extends plugin_renderer_base {
     }
     
     public function render_assignment_buttons($course){
-        $output = html_writer::tag('button',get_string('pastdueassignments','local_flexdates_dashboard'),array('class'=>'btn btn-danger','data-toggle'=>'collapse','data-collapse-group'=>'assignment-divs','data-target'=>"#{$course}-pastdue"));
-        $output.= html_writer::tag('button',get_string('upcomingassignments','local_flexdates_dashboard'),array('class'=>'btn btn-warning','data-toggle'=>'collapse','data-collapse-group'=>'assignment-divs','data-target'=>"#{$course}-upcoming"));
-        $output.= html_writer::tag('button',get_string('allassignments','local_flexdates_dashboard'),array('class'=>'btn btn-success','data-toggle'=>'collapse','data-collapse-group'=>'assignment-divs','data-target'=>"#{$course}-allassignments"));
+        $output = html_writer::tag('button',get_string('pastdueassignments','local_flexdates'),array('class'=>'btn btn-danger','data-toggle'=>'collapse','data-collapse-group'=>'assignment-divs','data-target'=>"#{$course}-pastdue"));
+        $output.= html_writer::tag('button',get_string('upcomingassignments','local_flexdates'),array('class'=>'btn btn-warning','data-toggle'=>'collapse','data-collapse-group'=>'assignment-divs','data-target'=>"#{$course}-upcoming"));
+        $output.= html_writer::tag('button',get_string('allassignments','local_flexdates'),array('class'=>'btn btn-success','data-toggle'=>'collapse','data-collapse-group'=>'assignment-divs','data-target'=>"#{$course}-allassignments"));
         return $output;
     }
     
@@ -516,16 +516,16 @@ class local_flexdates_dashboard_renderer extends plugin_renderer_base {
         $table->attributes['class'] = 'table table-hover';
         if($dashtab){
             $table->head = array(
-                get_string('course','local_flexdates_dashboard'),
-                get_string('assignment','local_flexdates_dashboard'),
-                get_string('duedate','local_flexdates_dashboard'),
-                get_string('grade','local_flexdates_dashboard')
+                get_string('course','local_flexdates'),
+                get_string('assignment','local_flexdates'),
+                get_string('duedate','local_flexdates'),
+                get_string('grade','local_flexdates')
             );
         } else{
             $table->head = array(
-                get_string('assignment','local_flexdates_dashboard'),
-                get_string('duedate','local_flexdates_dashboard'),
-                get_string('grade','local_flexdates_dashboard')
+                get_string('assignment','local_flexdates'),
+                get_string('duedate','local_flexdates'),
+                get_string('grade','local_flexdates')
             );
         }
         

@@ -29,8 +29,8 @@ require_once('lib.php');
 require_login();
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_url('/local/flexdates_dashboard/student.php');
-$output = $PAGE->get_renderer('local_flexdates_dashboard');
+$PAGE->set_url('/local/flexdates/student.php');
+$output = $PAGE->get_renderer('local_flexdates');
 $PAGE->requires->jquery();
 
 echo $output->header();

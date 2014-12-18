@@ -12,13 +12,13 @@ require_once($CFG->libdir . '/grade/grade_outcome.php');
 require_once($CFG->libdir . '/gradelib.php');
 
 
-function local_flexdates_dashboard_extends_navigation(global_navigation $navigation){
+function local_flexdates_extends_navigation(global_navigation $navigation){
     global $CFG;
     // TODO Put permissions on these so they do not appear for everyone
-    $navigation->add('Student Dashboard', new moodle_url($CFG->wwwroot.'/local/flexdates_dashboard/student.php'), navigation_node::TYPE_CONTAINER);
-    $navigation->add('Teacher Dashboard', new moodle_url($CFG->wwwroot.'/local/flexdates_dashboard/teacher.php'), navigation_node::TYPE_CONTAINER);
-    $navigation->add('Advisor Dashboard', new moodle_url($CFG->wwwroot.'/local/flexdates_dashboard/advisor.php'), navigation_node::TYPE_CONTAINER);
-    $navigation->add('Admin Dashboard', new moodle_url($CFG->wwwroot.'/local/flexdates_dashboard/admin.php'), navigation_node::TYPE_CONTAINER);
+    $navigation->add('Student Dashboard', new moodle_url($CFG->wwwroot.'/local/flexdates/student.php'), navigation_node::TYPE_CONTAINER);
+    $navigation->add('Teacher Dashboard', new moodle_url($CFG->wwwroot.'/local/flexdates/teacher.php'), navigation_node::TYPE_CONTAINER);
+    $navigation->add('Advisor Dashboard', new moodle_url($CFG->wwwroot.'/local/flexdates/advisor.php'), navigation_node::TYPE_CONTAINER);
+    $navigation->add('Admin Dashboard', new moodle_url($CFG->wwwroot.'/local/flexdates/admin.php'), navigation_node::TYPE_CONTAINER);
 }
 
 /**
@@ -28,31 +28,31 @@ function local_flexdates_dashboard_extends_navigation(global_navigation $navigat
  * @param stdClass $course The course to object for the report
  * @param stdClass $context The context of the course
  */
-function local_flexdates_dashboard_extends_settings_navigation(settings_navigation $navigation, context $context){
+function local_flexdates_extends_settings_navigation(settings_navigation $navigation, context $context){
     global $CFG,$PAGE;
     if($PAGE->course->id > 1){
-        if(has_capability('local/flexdates_dashboard:modify', $PAGE->context)){
+        if(has_capability('local/flexdates:modify', $PAGE->context)){
             $flex_node = $navigation->find('courseadmin', navigation_node::TYPE_COURSE)->add(
-                              get_string('flexdatessettings','local_flexdates_dashboard'),
+                              get_string('flexdatessettings','local_flexdates'),
                               navigation_node::TYPE_CONTAINER
                           );
             $flex_track = $flex_node->add(
-                                  'Track Course',
-                                  new moodle_url($CFG->wwwroot.'/local/flexdates_dashboard/trackcourse.php',array('id'=>$PAGE->course->id)),
+                                  get_string('trackcourse','local_flexdates'),
+                                  new moodle_url($CFG->wwwroot.'/local/flexdates/trackcourse/index.php',array('id'=>$PAGE->course->id)),
                                   navigation_node::TYPE_SETTING,
                                   null, null,
                                   new pix_icon('i/settings', '')
                               );
             $flex_enddates = $flex_node->add(
-                                  'End Dates',
-                                  new moodle_url($CFG->wwwroot.'/local/flexdates_completiondates/index.php',array('id'=>$PAGE->course->id)),
+                                  get_string('enddates','local_flexdates'),
+                                  new moodle_url($CFG->wwwroot.'/local/flexdates/completiondates/index.php',array('id'=>$PAGE->course->id)),
                                   navigation_node::TYPE_SETTING,
                                   null, null,
                                   new pix_icon('i/calendar', '')
                               );
             $flex_durations = $flex_node->add(
-                                  'Duration',
-                                  new moodle_url($CFG->wwwroot.'/local/flexdates_mod_duration/index.php',array('id'=>$PAGE->course->id)),
+                                  get_string('duration','local_flexdates'),
+                                  new moodle_url($CFG->wwwroot.'/local/flexdates/mod_duration/index.php',array('id'=>$PAGE->course->id)),
                                   navigation_node::TYPE_SETTING,
                                   null, null,
                                   new pix_icon('i/calendar', '')
