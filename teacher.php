@@ -29,10 +29,10 @@ require_once('lib.php');
 require_login();
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_url('/local/flexdates_dashboard/advisor.php');
-$output = $PAGE->get_renderer('local_flexdates_dashboard');
-$PAGE->requires->css('/local/flexdates_dashboard/static/css/offcanvas.css');
-$PAGE->requires->css('/local/flexdates_dashboard/static/css/datepicker3.css');
+$PAGE->set_url('/local/flexdates/teacher.php');
+$output = $PAGE->get_renderer('local_flexdates');
+$PAGE->requires->css('/local/flexdates/static/css/offcanvas.css');
+$PAGE->requires->css('/local/flexdates/static/css/datepicker3.css');
 $PAGE->requires->jquery();
 
 echo $output->header();
