@@ -97,6 +97,12 @@ function flexdates_get_tracked_courses($userid){
                 $data->summary = $course->summary;
                 $courses->resources[] = $data;
             }
+        } else{
+            $data = new stdClass;
+            $data->id = $course->id;
+            $data->title = $course->shortname;
+            $data->summary = $course->summary;
+            $courses->resources[] = $data;
         }
     }
     return $courses;
@@ -190,7 +196,7 @@ function flexdates_get_student_grades($courseid, $userid) {
                 $grade->datesubmitted  = $grade_grades[$userid]->get_datesubmitted();
                 $grade->dategraded     = $grade_grades[$userid]->get_dategraded();
                 // TODO allow users to set mastery level instead of hard coding it at 97%
-                $grade->mastered       = ($grade_grades[$userid]->finalgrade/$grade_item->grademax > 0.97) ? True : False;
+                $grade->mastered       = $grade_item->grademax ? (($grade_grades[$userid]->finalgrade/$grade_item->grademax > 0.97) ? True : False) : False;
                 if ($duedate = $DB->get_record('local_fd_student_due_dates',array('userid'=>$userid,'gradeitemid'=>$grade_item->id))){
                     $grade->duedate    = $duedate->duedate;
                 } else{
@@ -678,11 +684,6 @@ function flexdates_get_projected_completion_date($lessondurations,$sem_length,$e
         $total_duration += $item->duration;
     }
     
-    // create bucket of available dates for next 36 weeks
-    $today = time();
-    $future = $today + 21772800*2; // Get dates for next 36 weeks
-    $school_days = flexdates_get_available_due_dates($today, $future, $excluded_dates);
-    
     // Normalize due dates for ungraded assignments and sum them up
     $time_total = 0;
     foreach($lessondurations as $item){
@@ -692,9 +693,26 @@ function flexdates_get_projected_completion_date($lessondurations,$sem_length,$e
         }
     }
     
-    // look up projected_date date in school_days and make it a DateTime object
-    $projected_date = DateTime::createFromFormat('U', $school_days[round($time_total)]);
-    return $projected_date;
+    // create bucket of available dates for next 36 weeks
+    $today = time();
+    $future = $today + 21772800*2; // Get dates for next 36 weeks
+    $school_days = flexdates_get_available_due_dates($today, $future, $excluded_dates);
+    
+    //make 2 years the ceiling of projected completion date
+    if(round($time_total)>730){
+        $projected_date = DateTime::createFromFormat('U', $today + 63072000);
+        return $projected_date;
+    }
+    
+    while(true){
+        // check to make sure we have gone far enough, else go another 36 weeks
+        if($school_days[round($time_total)]){
+            // look up projected_date date in school_days and make it a DateTime object
+            $projected_date = DateTime::createFromFormat('U', $school_days[round($time_total)]);
+            return $projected_date;
+        }
+        $school_days = flexdates_get_available_due_dates($today, $future+21772800*2, $excluded_dates);
+   }
 }
 
 /**
@@ -1045,7 +1063,7 @@ class flexdates_course{
             //print_object($sem_length);
             $this->projected_completion_date = flexdates_get_projected_completion_date($lessondurations,$sem_length,$excluded_dates=array());
             $this->completion_date = DateTime::createFromFormat('U', $completion_record->completiondate);
-            $this->date_diff = $this->projected_completion_date->getTimestamp()-$this->completion_date->getTimestamp();
+            $this->date_diff = $this->projected_completion_date->getTimestamp() - $this->completion_date->getTimestamp();
         } else{
             $this->completion_date = null;
             $this->projected_completion_date = null;

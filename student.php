@@ -31,6 +31,7 @@ $context = context_system::instance();
 $PAGE->set_context($context);
 $PAGE->set_url('/local/flexdates/student.php');
 $output = $PAGE->get_renderer('local_flexdates');
+$PAGE->requires->css('/local/flexdates/static/css/datepicker3.css');
 $PAGE->requires->jquery();
 
 echo $output->header();
@@ -45,5 +46,9 @@ $scripts = array(
 );
 
 echo $output->include_js($scripts);
-
+echo "<script type='text/javascript'>
+    $(document).ready(function(){
+        $('body').removeClass('modal-open');
+    });
+</script>";
 

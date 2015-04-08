@@ -59,6 +59,10 @@ class local_flexdates_mod_duration_form extends moodleform {
                 if ($gradeitem->itemtype == "course" or $gradeitem->itemtype == "category") {
                     continue;
                 }
+                // Leave out grade items that are none type
+                if (!$gradeitem->gradetype){
+                    continue;
+                }
                 if($lesson_order_item = $DB->get_record('local_fd_mod_duration',array('gradeitemid'=>$gradeitem->id))){
                     $duration = $lesson_order_item->duration;
                     $itemorder = $lesson_order_item->itemorder;

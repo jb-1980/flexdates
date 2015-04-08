@@ -41,6 +41,9 @@ $string['enddates'] = 'End Dates';
 $string['eventcoursemoduledurationupdated'] = 'Course Module Duration Updated';
 $string['eventstudentenddateupdated'] = 'Student enddate updated';
 $string['flexdatessettings'] = 'Flex Dates Settings';
+$string['flexdates:modify'] = 'Modify Flex Dates Settings';
+$string['flexdates:viewcompletiondates']='View flexdates completion dates';
+$string['flexdates:viewmodduration']='View flexdates duration values for activities';
 $string['grade'] = 'Grade';
 $string['gradebookitems'] = 'Gradebook Item Durations';
 $string['itemname'] = 'Item Name';
@@ -52,6 +55,7 @@ $string['projectedcompletiondate']='Projected Completion Date';
 $string['rawgrade']='Raw Grade';
 $string['trackcourse']='Track Course';
 $string['trackcourse_help']='Select whether or not to include this course in the flexdates progress reports';
+$string['untrackedcourses']='Courses currently not tracking progess';
 $string['upcomingassignments']='Upcoming Assignments';
 
 
