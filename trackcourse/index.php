@@ -52,14 +52,21 @@ if ($mform->is_cancelled()) {
     // Redirect to course view page if form is cancelled.
     redirect($returnurl);
 } elseif($data = $mform->get_data()) {
-    print_object($data);
     if(!$record = $DB->get_record('local_fd_trackcourse',array('courseid'=>$id))){
         $dataobject = new stdClass;
         $dataobject->courseid = $id;
         $dataobject->track = $data->trackoption;
+        $dataobject->mastered = $data->level['mastered']*0.01;
+        $dataobject->level2 = $data->level['level2']*0.01;
+        $dataobject->level1 = $data->level['level1']*0.01;
+        $dataobject->practiced = $data->level['practiced']*0.01;
         $DB->insert_record('local_fd_trackcourse',$dataobject);
     } else{
         $record->track = $data->trackoption;
+        $record->mastered = $data->level['mastered']*0.01;
+        $record->level2 = $data->level['level2']*0.01;
+        $record->level1 = $data->level['level1']*0.01;
+        $record->practiced = $data->level['practiced']*0.01;
         $DB->update_record('local_fd_trackcourse', $record);
     }
     rebuild_course_cache($course->id);

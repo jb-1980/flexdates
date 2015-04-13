@@ -40,7 +40,7 @@ require_once('lib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @since Moodle 2.2
  */
-class local_flexdates_dashboard_external extends external_api {
+class local_flexdates_external extends external_api {
 
     /**
      * Returns description of method parameters.
@@ -57,8 +57,8 @@ class local_flexdates_dashboard_external extends external_api {
                                         'roleid' => new external_value(PARAM_INT, 'Role to assign to the user'),
                                         'userid' => new external_value(PARAM_INT, 'The user that is going to be enrolled'),
                                         'courseid' => new external_value(PARAM_INT, 'The course to enrol the user role in'),
-                                        'timestart' => new external_value(PARAM_INT, 'Timestamp when the enrolment start', VALUE_OPTIONAL),
-                                        'timeend' => new external_value(PARAM_INT, 'Timestamp when the enrolment end', VALUE_OPTIONAL),
+                                        'timestart' => new external_value(PARAM_INT, 'Timestamp when the enrolment starts', VALUE_OPTIONAL),
+                                        'timeend' => new external_value(PARAM_INT, 'Timestamp when the enrolment ends', VALUE_OPTIONAL),
                                         'suspend' => new external_value(PARAM_INT, 'set to 1 to suspend the enrolment', VALUE_OPTIONAL)
                                     )
                             )
@@ -135,30 +135,30 @@ class local_flexdates_dashboard_external extends external_api {
             
             
             
-            // Finally proceed the enrolment.
+            // Finally proceed with the enrolment.
             $enrolment['timestart'] = isset($enrolment['timestart']) ? $enrolment['timestart'] : 0;
-            $enrolment['timeend'] = 0;
+            $enrolment['timeend'] = isset($enrolment['timeend']) ? $enrolment['timeend'] : 0;
             $enrolment['status'] = (isset($enrolment['suspend']) && !empty($enrolment['suspend'])) ?
                     ENROL_USER_SUSPENDED : ENROL_USER_ACTIVE;
 
             $enrol->enrol_user($instance, $enrolment['userid'], $enrolment['roleid'],
-                    $enrolment['timestart'], $enrolment['timeend'], $enrolment['status']);
+                    $enrolment['timestart'], 0, $enrolment['status']);
             
             // Once enroled, create personalized due dates for progress reporting
-            if(!$record = $DB->get_record('local_sd_completion_dates',array('userid'=>$enrolment['userid'],'courseid'=>$enrolment['courseid']))){
+            if(!$record = $DB->get_record('local_fd_completion_dates',array('userid'=>$enrolment['userid'],'courseid'=>$enrolment['courseid']))){
                 $dataobject = new stdClass;
                 $dataobject->userid = $enrolment['userid'];
                 $dataobject->courseid = $enrolment['courseid'];
                 $dataobject->startdate = isset($enrolment['timestart']) ? $enrolment['timestart'] : 0;
                 $dataobject->completiondate = isset($enrolment['timeend']) ? $enrolment['timeend'] : 0;
-                $DB->insert_record('local_sd_completion_dates',$dataobject);
-                $lessondurations = $DB->get_records('report_lessonduration',array('courseid'=>$enrolment['courseid']),'itemorder');
+                $DB->insert_record('local_fd_completion_dates',$dataobject);
+                $lessondurations = $DB->get_records('local_fd_mod_duration',array('courseid'=>$enrolment['courseid']),'itemorder');
                 studentdash_update_student_due_dates($enrolment['userid'],$enrolment['courseid'],$lessondurations,$excluded_dates=array());
             } elseif($update_flag = ($record->completiondate != $enrolment['timeend'] or $record->startdate != $enrolment['timestart'])){
                 $record->completiondate = $enrolment['timeend'];
                 $record->startdate = $enrolment['timestart'];
-                $DB->update_record('local_sd_completion_dates', $record);
-                $lessondurations = $DB->get_records('report_lessonduration',array('courseid'=>$enrolment['courseid']),'itemorder');
+                $DB->update_record('local_fd_completion_dates', $record);
+                $lessondurations = $DB->get_records('local_fd_mod_duration',array('courseid'=>$enrolment['courseid']),'itemorder');
                 flexdates_update_student_due_dates($enrolment['userid'],$enrolment['courseid'],$lessondurations,$excluded_dates=array());
             }
 

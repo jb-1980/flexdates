@@ -51,12 +51,15 @@ class local_flexdates_mod_duration_form extends moodleform {
             $mform->addElement('header', 'gradebookitemsheader',
                     get_string('gradebookitems', 'local_flexdates'));
             $mform->setExpanded('gradebookitemsheader', False);
-            //$table_head = '<table class="table"><tr><th>Item Name</th><th>Duration</th><th>Order</th></tr>';
-            //$mform->addElement('html',$table_head);
+            
             // Looping through all grade items.
             foreach ($gradeitems as $gradeitem) {
                 // Skip course and category grade items.
                 if ($gradeitem->itemtype == "course" or $gradeitem->itemtype == "category") {
+                    continue;
+                }
+                // Leave out grade items that are none type
+                if (!$gradeitem->gradetype){
                     continue;
                 }
                 if($lesson_order_item = $DB->get_record('local_fd_mod_duration',array('gradeitemid'=>$gradeitem->id))){
@@ -69,11 +72,8 @@ class local_flexdates_mod_duration_form extends moodleform {
 
                 // Add element to display grade item.
                 $item_array = array();
-                  //$item_array[] =& $mform->createElement('html','<tr><td>');
                   $item_array[] =& $mform->createElement('text',"duration",$gradeitem->itemname);
-                  //$item_array[] =& $mform->createElement('html','</td><td>');
                   $item_array[] =& $mform->createElement('text',"itemorder",$gradeitem->itemname);
-                  //$item_array[] =& $mform->createElement('html','</td></tr>');
                 $mform->addGroup($item_array, "lessonvalues[$gradeitem->id]", $gradeitem->itemname);
                 $mform->setType("lessonvalues[$gradeitem->id][duration]", PARAM_RAW);
                 $mform->setDefault("lessonvalues[$gradeitem->id][duration]", $duration);

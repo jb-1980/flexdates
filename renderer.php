@@ -83,7 +83,7 @@ class local_flexdates_renderer extends plugin_renderer_base {
             }
             //print_object($dashtab_assignments);
             usort($dashtab_assignments,'flexdates_sort_array_by_duedate');
-            $dashtab_content = $this->render_dashboard_tabpane('This is where the announcements go!',$dash_tab_data,$dashtab_assignments);
+            $dashtab_content = $this->render_dashboard_tabpane('This is where the announcements go!',$dash_tab_data,$dashtab_assignments,$courses->resources);
         $tab_content.= "<div class='tab-pane active' id='flexdates'>{$dashtab_content}</div>";
         $container_content.= $this->render_tab_content($tab_content);
         return $this->render_container_fluid($container_content);
@@ -94,14 +94,14 @@ class local_flexdates_renderer extends plugin_renderer_base {
         $this->set_userid($advisor);
         $advisees = $DB->get_records('user',array('department'=>$USER->idnumber),$sort='lastname');
         $sidepane = $this->render_advisor_menu($advisees);
-        $output = html_writer::div($sidepane,'col-md-2 sidebar-offcanvas',array('id'=>'advisor-sidebar','role'=>'navigation'));
+        $output = html_writer::div($sidepane,'col-md-2 ',array('id'=>'advisor-sidebar','role'=>'navigation'));
         if($advisee){
             // get courses info //
             $courses = flexdates_get_tracked_courses($advisee->id);
             // Parse data and prepare for display //
-            $toggle_button = html_writer::tag('button','Show students',array('class'=>'btn btn-primary btn-xs','data-toggle'=>'offcanvas'));
-            $dash_content = html_writer::tag('p',$toggle_button,array('class'=>"pull-left visible-xs"));
-            $dash_content.= $this->render_navtabs($courses->active);
+#            $toggle_button = html_writer::tag('button','Show students',array('class'=>'btn btn-primary btn-xs','data-toggle'=>'offcanvas'));
+#            $dash_content = html_writer::tag('p',$toggle_button,array('class'=>"pull-left visible-xs"));
+            $dash_content = $this->render_navtabs($courses->active);
             $tab_content = '';
             $dash_tab_data = array();
             foreach($courses->active as $data){
@@ -162,14 +162,17 @@ class local_flexdates_renderer extends plugin_renderer_base {
         $teacher_courses = $DB->get_records_sql($t_sql);
         //print_object($teacher_courses);
         $students = array();
+        $roleid = $DB->get_record('role',array('shortname'=>'student'))->id;
         foreach($teacher_courses as $course){
             $coursecontext = context_course::instance($course->id);
             $enroled_users = get_enrolled_users($coursecontext, $withcapability = '', $groupid = 0, $userfields = 'u.id,u.firstname,u.lastname', $orderby = null,$limitfrom = 0, $limitnum = 0, $onlyactive = true);
             foreach($enroled_users as $e_user){
-                if(in_array($e_user,$students)){
-                    continue;
-                } else{
-                    $students[]= $e_user;
+                if(user_has_role_assignment($e_user->id, $roleid, $contextid = $coursecontext->id)){
+                    if(in_array($e_user,$students)){
+                        continue;
+                    } else{
+                        $students[]= $e_user;
+                    }
                 }
             }
         }
@@ -216,7 +219,7 @@ class local_flexdates_renderer extends plugin_renderer_base {
             }
             //print_object($dashtab_assignments);
             usort($dashtab_assignments,'flexdates_sort_array_by_duedate');
-            $dashtab_content = $this->render_dashboard_tabpane('This is where the announcements go!',$dash_tab_data,$dashtab_assignments);
+            $dashtab_content = $this->render_dashboard_tabpane('This is where the announcements go!',$dash_tab_data,$dashtab_assignments,$courses->resources);
             $tab_content.= "<div class='tab-pane active' id='flexdates'>{$dashtab_content}</div>";
             $dash_content.= $this->render_tab_content($tab_content);
             $output.= $this->render_col_md_x($dash_content,10);
@@ -228,9 +231,11 @@ class local_flexdates_renderer extends plugin_renderer_base {
         return $output;
     }
     
-    public function render_dashboard_tabpane($announcement,$courses_info,$courses_assignments){
+    public function render_dashboard_tabpane($announcement,$courses_info,$courses_assignments,$untracked){
         $output = $this->render_announcement_well($announcement);
         $output.= $this->render_dashboard_tab_progress_report_table($courses_info);
+        //print_object($untracked);
+        $output.= $this->render_dashboard_tab_untracked_courses($untracked);
         $output.= "<div style='padding:2px;'>";
         $output.= $this->render_assignment_buttons('dashboard-tabpane');
         $output.= "</div>";
@@ -240,6 +245,36 @@ class local_flexdates_renderer extends plugin_renderer_base {
         
         return $output;
         
+    }
+    
+    public function render_dashboard_tab_untracked_courses($untracked_courses){
+        global $CFG;
+        $untracked = html_writer::start_tag('div')."\n";
+        foreach($untracked_courses as $course){
+            $button=html_writer::tag('a',$course->title,array('class'=>'btn btn-primary btn-large','href'=>"{$CFG->wwwroot}/course/view.php?id={$course->id}",'role'=>'button'));
+            $untracked.=html_writer::tag('p',$button,array('style'=>"padding:5px;"))."\n";
+        }
+        $untracked.= html_writer::end_tag('div')."\n";
+        $untracked_div=html_writer::div($untracked,'panel-collapse collapse',array('role'=>'tabpanel','aria-labelledby'=>'untracked-courses','aria-expanded'=>'false',"id"=>"untracked-courses"));
+        
+        $panel_title=html_writer::tag('h4',get_string('untrackedcourses','local_flexdates'),array("class"=>"panel-title"));
+        $header_panel = html_writer::div($panel_title,'panel-heading',array("role"=>"tab","id"=>"untracked-courses-heading",'data-toggle'=>"collapse",'data-target'=>'#untracked-courses'));
+        //$content = html_writer::div($collapse_panel."\n".$untracked_div,'panel panel-default',array('data-toggle'=>'collapse','aria-expanded'=>'true','aria-controls'=>'untracked-courses','data-target'=>'#untracked-courses'));
+        $untracked = html_writer::div($header_panel."\n".$untracked_div, 'panel panel-default');
+        
+        
+      
+      
+    
+  
+        
+#        "<span data-toggle='collapse' data-target='#untracked-courses' aria-expanded='false' aria-controls='untracked-courses'>"
+#                          .get_string('untrackedcourses','local_flexdates')
+#                     ."</span>";
+#        $untracked.= "<div class='collapse' id='untracked-courses'>";
+#        
+#        $untracked.="</div>";
+        return $untracked;
     }
     
     public function render_announcement_well($announcement){
@@ -300,7 +335,7 @@ class local_flexdates_renderer extends plugin_renderer_base {
         }
         $students_list = html_writer::alist($items, array('class'=>'nav navmenu-nav'), $tag = 'ul');
         $side_content = html_writer::tag('h4','STUDENTS');
-        $side_content.= html_writer::tag('input','',array('id'=>'students-search','class'=>'form-control','placeholder'=>'search students'));
+        $side_content.= html_writer::tag('input','',array('id'=>'advisor-students-search','class'=>'form-control','placeholder'=>'search students'));
         $side_content.= html_writer::div($students_list,'',array('id'=>'students-list'));
         return html_writer::div($side_content,'navmenu navmenu-default navmenu-fixed-left offcanvas-sm');
     }
@@ -314,7 +349,7 @@ class local_flexdates_renderer extends plugin_renderer_base {
         }
         $students_list = html_writer::alist($items, array('class'=>'nav navmenu-nav'), $tag = 'ul');
         $side_content = html_writer::tag('h4','STUDENTS');
-        $side_content.= html_writer::tag('input','',array('id'=>'students-search','class'=>'form-control','placeholder'=>'search students'));
+        $side_content.= html_writer::tag('input','',array('id'=>'teacher-students-search','class'=>'form-control','placeholder'=>'search students'));
         $side_content.= html_writer::div($students_list,'',array('id'=>'students-list'));
         return html_writer::div($side_content,'navmenu navmenu-default navmenu-fixed-left offcanvas-sm');
     }
@@ -388,8 +423,8 @@ class local_flexdates_renderer extends plugin_renderer_base {
      */
     public function render_gradegraph_panel($grade){
         $content = flexdates_makesvg($grade->anglelist, $grade->course_grade, $cx = 100, $cy = 100, $radius=95);
-        $helper = 'Grading and progress information. The inner circle is the amount of work expected. Red indicates you are far behind, orange is slightly behind, green is on schedule, and blue is far ahead. The outer circle is the amount of work completed and/or mastered. Details are reported in the center of the circle.';
-        $header = 'Grade Info: ';
+        $helper = get_string('gradegraphpanelhelper','local_flexdates');
+        $header = get_string('gradegraphpanelheader','local_flexdates');
         $state = $this->grade_state($grade->course_grade);
         $head_style = 'text-align:center';
         $body_style = 'text-align:center;font-size:20px;';

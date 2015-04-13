@@ -23,9 +23,9 @@ require_once($CFG->libdir.'/formslib.php');
 
 
 /**
- * The form for tracking courses for the flexdates plugin
+ * The form for tracking courses and setting defaults for the flexdates plugin
  *
- * @copyright 2014 Joseph Gilgen
+ * @copyright 2015 Joseph Gilgen
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class local_flexdates_dashboard_trackcourse_form extends moodleform {
@@ -40,8 +40,41 @@ class local_flexdates_dashboard_trackcourse_form extends moodleform {
         $option = $mform->addElement('selectyesno', 'trackoption', get_string('trackcourse', 'local_flexdates'));
         if($record = $DB->get_record('local_fd_trackcourse',array('courseid'=>$COURSE->id))){
             $option = $option->setSelected($record->track);
+            $levels = new stdClass;
+            $levels->mastered = $record->mastered;
+            $levels->level2 = $record->level2;
+            $levels->level1 = $record->level1;
+            $levels->practiced = $record->practiced;
+        } else{
+            $levels = new stdClass;
+            $levels->mastered = 0.95;
+            $levels->level2 = 0.85;
+            $levels->level1 = 0.75;
+            $levels->practiced = 0.65;
         }
         $mform->addHelpButton('trackoption', 'trackcourse','local_flexdates');
+        
+        // A sample string variable with a default value.
+        $mform->addElement('text', 'level[mastered]', get_string('levelmastered', 'local_flexdates'));
+        $mform->setDefault('level[mastered]', $levels->mastered*100);
+        $mform->setType('level[mastered]', PARAM_INT);
+        $mform->addHelpButton('level[mastered]', 'levelmastered','local_flexdates');
+        
+        $mform->addElement('text', 'level[level2]', get_string('level2', 'local_flexdates'));
+        $mform->setDefault('level[level2]', $levels->level2*100);
+        $mform->setType('level[level2]', PARAM_INT);
+        $mform->addHelpButton('level[level2]', 'level2','local_flexdates');
+        
+        $mform->addElement('text', 'level[level1]', get_string('level1', 'local_flexdates'));
+        $mform->setDefault('level[level1]', $levels->level1*100);
+        $mform->setType('level[level1]', PARAM_INT);
+        $mform->addHelpButton('level[level1]', 'level1','local_flexdates');
+        
+        $mform->addElement('text', 'level[practiced]', get_string('levelpracticed', 'local_flexdates'));
+        $mform->setDefault('level[practiced]', $levels->practiced*100);
+        $mform->setType('level[practiced]', PARAM_INT);
+        $mform->addHelpButton('level[practiced]', 'levelpracticed','local_flexdates');
+        
         $this->add_action_buttons();
     }
 }

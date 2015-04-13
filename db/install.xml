@@ -21,6 +21,10 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="id of course to track"/>
         <FIELD NAME="track" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="to track or not to track, that is the question"/>
+        <FIELD NAME="mastered" TYPE="number" LENGTH="3" NOTNULL="true" DEFAULT="0.95" SEQUENCE="false" DECIMALS="2" COMMENT="percent level for mastery"/>
+        <FIELD NAME="level2" TYPE="number" LENGTH="3" NOTNULL="true" DEFAULT="0.85" SEQUENCE="false" DECIMALS="2" COMMENT="percent level for level2"/>
+        <FIELD NAME="level1" TYPE="number" LENGTH="3" NOTNULL="true" DEFAULT="0.75" SEQUENCE="false" DECIMALS="2" COMMENT="percent level for level1"/>
+        <FIELD NAME="practiced" TYPE="number" LENGTH="3" NOTNULL="true" DEFAULT="0.65" SEQUENCE="false" DECIMALS="2" COMMENT="percent level for practiced"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

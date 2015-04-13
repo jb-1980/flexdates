@@ -29,11 +29,10 @@ require_once('lib.php');
 require_login();
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_url('/local/flexdates_dashboard/admin.php');
-$output = $PAGE->get_renderer('local_flexdates_dashboard');
-//$PAGE->requires->css('/local/flexdates_dashboard/static/css/offcanvas.css');
-$PAGE->requires->css('/local/flexdates_dashboard/static/css/datepicker3.css');
-$PAGE->requires->css('/local/flexdates_dashboard/static/css/bootstrap-select.min.css');
+$PAGE->set_url('/local/flexdates/admin.php');
+$output = $PAGE->get_renderer('local_flexdates');
+$PAGE->requires->css('/local/flexdates/static/css/datepicker3.css');
+$PAGE->requires->css('/local/flexdates/static/css/bootstrap-select.min.css');
 $PAGE->requires->jquery();
 //$PAGE->requires->js('/local/flexdates_dashboard/static/js/bootstrap.min.js');
 //$PAGE->requires->js('/local/flexdates_dashboard/static/js/flexdates.js');
@@ -116,17 +115,11 @@ $scripts = array(
   'static/js/flexdates-select-filter.js'
 );
 echo $output->include_js($scripts);
-//Get user data, and enrolled courses
-#global $DB,$USER;
-
-#if(array_key_exists('student', $_GET)){
-#    $advisee = $DB->get_record('user',array('id'=>$_GET['student']));
-#    echo $output->render_advisor_dashboard($USER->id,$advisee);
-#} else{
-#    echo $output->render_advisor_dashboard($USER->id);
-#}
-//echo $output->footer();
-
+echo "<script type='text/javascript'>
+    $(document).ready(function(){
+        $('body').removeClass('modal-open');
+    });
+</script>";
 
 
 

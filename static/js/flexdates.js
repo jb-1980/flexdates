@@ -86,14 +86,32 @@ $('#flexdates-set-custom-range').on('click',function(e){
   $('#customdates-modal').modal('hide')
 });
 
-$("#students-search").keyup(function(){
+$("#advisor-students-search").keyup(function(){
     var data = {
         "value":$(this).val()
     }
     $.ajax({
         type:"POST",
         dataType:"html",
-        url:'ajax/student_search.php',
+        url:'ajax/advisor_student_search.php',
+        data:data,
+        success: function(msg){
+            $('#students-list').html(msg);
+        }
+    })
+    .fail(function(j,t,e){
+        console.log('Error::!! '+e);
+    });
+});
+
+$("#teacher-students-search").keyup(function(){
+    var data = {
+        "value":$(this).val()
+    }
+    $.ajax({
+        type:"POST",
+        dataType:"html",
+        url:'ajax/teacher_student_search.php',
         data:data,
         success: function(msg){
             $('#students-list').html(msg);

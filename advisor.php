@@ -31,7 +31,7 @@ $context = context_system::instance();
 $PAGE->set_context($context);
 $PAGE->set_url('/local/flexdates/advisor.php');
 $output = $PAGE->get_renderer('local_flexdates');
-$PAGE->requires->css('/local/flexdates/static/css/offcanvas.css');
+//$PAGE->requires->css('/local/flexdates/static/css/offcanvas.css');
 $PAGE->requires->css('/local/flexdates/static/css/datepicker3.css');
 $PAGE->requires->jquery();
 
@@ -55,8 +55,11 @@ $scripts = array(
 );
 
 echo $output->include_js($scripts);
-//echo $output->footer();
-
+echo "<script type='text/javascript'>
+    $(document).ready(function(){
+        $('body').removeClass('modal-open');
+    });
+</script>";
 
 
 

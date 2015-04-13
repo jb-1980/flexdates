@@ -31,23 +31,18 @@ $context = context_system::instance();
 $PAGE->set_context($context);
 $PAGE->set_url('/local/flexdates/teacher.php');
 $output = $PAGE->get_renderer('local_flexdates');
+
 $PAGE->requires->css('/local/flexdates/static/css/offcanvas.css');
 $PAGE->requires->css('/local/flexdates/static/css/datepicker3.css');
+$PAGE->requires->css('/local/flexdates_dashboard/static/css/offcanvas.css');
+$PAGE->requires->css('/local/flexdates_dashboard/static/css/datepicker3.css');
+
 $PAGE->requires->jquery();
 
 echo $output->header();
 
 //Get user data, and enrolled courses
 global $DB,$USER;
-$t_sql = "SELECT DISTINCT c.id, c.fullname,u.lastname,r.name
-            FROM {$CFG->prefix}role_assignments ra
-            JOIN {$CFG->prefix}user u ON u.id = ra.userid
-            JOIN {$CFG->prefix}role r ON r.id = ra.roleid
-            JOIN {$CFG->prefix}context ct ON ct.id = ra.contextid
-            JOIN {$CFG->prefix}course c ON c.id = ct.instanceid
-           WHERE (r.shortname = 'teacher' OR r.shortname = 'editingteacher')
-                 AND u.id={$USER->id};";
-$teacher_courses = $DB->get_records_sql($t_sql);
 $student = optional_param('student',0,PARAM_INT);
 if($student){
     $student = $DB->get_record('user',array('id'=>$student));
@@ -60,10 +55,16 @@ $scripts = array(
   'static/js/bootstrap.min.js',
   'static/js/bootstrap-datepicker.js',
   'static/js/flexdates-datepicker.js',
-  'static/js/flexdates-assignments.js'
+  'static/js/flexdates-assignments.js',
+  'static/js/flexdates.js'
 );
 
 echo $output->include_js($scripts);
+echo "<script type='text/javascript'>
+    $(document).ready(function(){
+        $('body').removeClass('modal-open');
+    });
+</script>";
 //echo $output->footer();
 
 

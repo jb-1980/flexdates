@@ -25,10 +25,10 @@
 
 $functions = array(
 
-    'local_flexdates_dashboard_enrol_manual_enrol_users' => array(
-        'classname'   => 'local_flexdates_dashboard_external',
+    'local_flexdates_enrol_manual_enrol_users' => array(
+        'classname'   => 'local_flexdates_external',
         'methodname'  => 'enrol_users',
-        'classpath'   => 'local/flexdates_dashboard/externallib.php',
+        'classpath'   => 'local/flexdates/externallib.php',
         'description' => 'Manual enrol users',
         'capabilities'=> 'enrol/manual:enrol',
         'type'        => 'write',

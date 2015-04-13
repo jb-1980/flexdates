@@ -123,29 +123,31 @@ class local_flexdates_observer {
         global $CFG,$DB;
         # create activity duration record from local_fd_activity_duration with default 0
         // get gradeitem id from $event
-        $gradeitemid = $DB->get_record('grade_items',array('itemmodule'=>$event->other->modulename,'iteminstance'=>$event->other->instanceid))->id;
-        // build object to populate database with, and create record
-        $dataobject = new stdClass;
-        $dataobject->gradeitemid = $gradeitemid;
-        $dataobject->courseid = $event->courseid;
-        $dataobject->duration = 0;
-        $dataobject->itemorder = 0;
-        $DB->insert_record('local_fd_mod_duration',$dataobject);
-        // get users in course to update their due dates
-        $coursecontext = context_course::instance($event->courseid);
-        $users = get_enrolled_users($coursecontext, $withcapability = '', $groupid = 0, $userfields = 'u.id,u.firstname,u.lastname', $orderby = null,$limitfrom = 0, $limitnum = 0, $onlyactive = true);
-        $activitydurations = $DB->get_records('local_fd_mod_duration',array('courseid'=>$event->courseid),'itemorder');
-        foreach($users as $key=>$user){
-           if(!$enrolled = $DB->get_record('local_fd_completion_dates',array('userid'=>$user->id))){
-               $enrol_record = new stdClass;
-               $enrol_record->userid = $user->id;
-               $enrol_record->courseid = $event->courseid;
-               $enrol_record->startdate = 0;
-               $enrol_record->completiondate = 0;
-               $DB->insert_record('local_fd_completion_dates',$enrol_record);
-           }
-           flexdates_update_student_due_dates($user->id,$event->courseid,$activitydurations,$excluded_dates=array());
+        if($gradeitemid = $DB->get_record('grade_items',array('itemmodule'=>$event->other['modulename'],'iteminstance'=>$event->other['instanceid']))){
+            // build object to populate database with, and create record
+            $dataobject = new stdClass;
+            $dataobject->gradeitemid = $gradeitemid->id;
+            $dataobject->courseid = $event->courseid;
+            $dataobject->duration = 0;
+            $dataobject->itemorder = 0;
+            $DB->insert_record('local_fd_mod_duration',$dataobject);
+            // get users in course to update their due dates
+            $coursecontext = context_course::instance($event->courseid);
+            $users = get_enrolled_users($coursecontext, $withcapability = '', $groupid = 0, $userfields = 'u.id,u.firstname,u.lastname', $orderby = null,$limitfrom = 0, $limitnum = 0, $onlyactive = true);
+            $activitydurations = $DB->get_records('local_fd_mod_duration',array('courseid'=>$event->courseid),'itemorder');
+            foreach($users as $key=>$user){
+               if(!$enrolled = $DB->get_record('local_fd_completion_dates',array('userid'=>$user->id))){
+                   $enrol_record = new stdClass;
+                   $enrol_record->userid = $user->id;
+                   $enrol_record->courseid = $event->courseid;
+                   $enrol_record->startdate = 0;
+                   $enrol_record->completiondate = 0;
+                   $DB->insert_record('local_fd_completion_dates',$enrol_record);
+               }
+               flexdates_update_student_due_dates($user->id,$event->courseid,$activitydurations,$excluded_dates=array());
+            }
         }
+        
         
     }
 

@@ -97,10 +97,38 @@ function flexdates_get_tracked_courses($userid){
                 $data->summary = $course->summary;
                 $courses->resources[] = $data;
             }
+        } else{
+            $data = new stdClass;
+            $data->id = $course->id;
+            $data->title = $course->shortname;
+            $data->summary = $course->summary;
+            $courses->resources[] = $data;
         }
     }
     return $courses;
 }
+
+/**
+ *
+ */
+function flexdates_get_mastery_level($courseid,$level){
+    global $DB;
+    $levels = $DB->get_record('local_fd_trackcourse',array('courseid'=>$courseid));
+    if($level == null){
+        return 'notstarted';
+    } elseif($level >= $levels->mastered){
+        return 'mastered';
+    } elseif($level >= $levels->level2){
+        return 'level2';
+    } elseif($level >= $levels->level1){
+        return 'level1';
+    } elseif($level >= $levels->practiced){
+        return 'practiced';
+    } else{
+        return 'struggling';
+    }
+}
+
 /**
  * Returns grading information for student grade items in a course
  *
@@ -129,8 +157,9 @@ function flexdates_get_student_grades($courseid, $userid) {
     if ($grade_items = grade_item::fetch_all($params)) {
         //print_object($grade_items);
         foreach ($grade_items as $grade_item) {
-            $decimalpoints = null;
-            //print_object($grade_item);
+            if($grade_item->gradetype == GRADE_TYPE_NONE){
+                continue;
+            }
             if (empty($grade_item->outcomeid)) {
                 // prepare information about grade item
                 $item = new stdClass();
@@ -159,9 +188,7 @@ function flexdates_get_student_grades($courseid, $userid) {
                 }
                 $item->grades     = array();
 
-                switch ($grade_item->gradetype) {
-                    case GRADE_TYPE_NONE:
-                        continue;
+                switch ($grade_item->gradetype){
 
                     case GRADE_TYPE_VALUE:
                         $item->scaleid = 0;
@@ -173,7 +200,7 @@ function flexdates_get_student_grades($courseid, $userid) {
                         $item->grademax   = 0;
                         $item->gradepass  = 0;
                         break;
-                }                
+                }
 
                 $grade_grades = grade_grade::fetch_users_grades($grade_item, array($userid), true);
                 $grade_grades[$userid]->grade_item =& $grade_item;
@@ -189,8 +216,7 @@ function flexdates_get_student_grades($courseid, $userid) {
                 $grade->usermodified   = $grade_grades[$userid]->usermodified;
                 $grade->datesubmitted  = $grade_grades[$userid]->get_datesubmitted();
                 $grade->dategraded     = $grade_grades[$userid]->get_dategraded();
-                // TODO allow users to set mastery level instead of hard coding it at 97%
-                $grade->mastered       = ($grade_grades[$userid]->finalgrade/$grade_item->grademax > 0.97) ? True : False;
+                $grade->masterylevel   = ($grade_item->grademax && $grade_item->gradetype) ? flexdates_get_mastery_level($courseid,$grade_grades[$userid]->finalgrade/$grade_item->grademax) : 'notstarted';
                 if ($duedate = $DB->get_record('local_fd_student_due_dates',array('userid'=>$userid,'gradeitemid'=>$grade_item->id))){
                     $grade->duedate    = $duedate->duedate;
                 } else{
@@ -198,17 +224,17 @@ function flexdates_get_student_grades($courseid, $userid) {
                 }
 
                 // create text representation of grade
-                if ($grade_item->gradetype == GRADE_TYPE_TEXT or $grade_item->gradetype == GRADE_TYPE_NONE) {
+                if ($grade_item->gradetype == GRADE_TYPE_TEXT){
                     $grade->grade          = null;
                     $grade->str_grade      = '-';
                     $grade->str_long_grade = $grade->str_grade;
 
-                } else if (in_array($grade_item->id, $needsupdate)) {
+                } else if (in_array($grade_item->id, $needsupdate)){
                     $grade->grade          = false;
                     $grade->str_grade      = get_string('error');
                     $grade->str_long_grade = $grade->str_grade;
 
-                } else if (is_null($grade->grade)) {
+                } else if (is_null($grade->grade)){
                     $grade->str_grade      = '-';
                     $grade->str_long_grade = $grade->str_grade;
 
@@ -678,11 +704,6 @@ function flexdates_get_projected_completion_date($lessondurations,$sem_length,$e
         $total_duration += $item->duration;
     }
     
-    // create bucket of available dates for next 36 weeks
-    $today = time();
-    $future = $today + 21772800*2; // Get dates for next 36 weeks
-    $school_days = flexdates_get_available_due_dates($today, $future, $excluded_dates);
-    
     // Normalize due dates for ungraded assignments and sum them up
     $time_total = 0;
     foreach($lessondurations as $item){
@@ -692,9 +713,26 @@ function flexdates_get_projected_completion_date($lessondurations,$sem_length,$e
         }
     }
     
-    // look up projected_date date in school_days and make it a DateTime object
-    $projected_date = DateTime::createFromFormat('U', $school_days[round($time_total)]);
-    return $projected_date;
+    // create bucket of available dates for next 36 weeks
+    $today = time();
+    $future = $today + 21772800*2; // Get dates for next 36 weeks
+    $school_days = flexdates_get_available_due_dates($today, $future, $excluded_dates);
+    
+    //make 2 years the ceiling of projected completion date
+    if(round($time_total)>730){
+        $projected_date = DateTime::createFromFormat('U', $today + 63072000);
+        return $projected_date;
+    }
+    
+    while(true){
+        // check to make sure we have gone far enough, else go another 36 weeks
+        if($school_days[round($time_total)]){
+            // look up projected_date date in school_days and make it a DateTime object
+            $projected_date = DateTime::createFromFormat('U', $school_days[round($time_total)]);
+            return $projected_date;
+        }
+        $school_days = flexdates_get_available_due_dates($today, $future+21772800*2, $excluded_dates);
+   }
 }
 
 /**
@@ -955,6 +993,26 @@ class flexdates_course{
      */
     public $mastered = 0.0;
     /**
+     * @var float the number of assignments level2 in a course
+     */
+    public $level2 = 0.0;
+    /**
+     * @var float the number of assignments level1 in a course
+     */
+    public $level1 = 0.0;
+    /**
+     * @var float the number of assignments practiced in a course
+     */
+    public $practiced = 0.0;
+    /**
+     * @var float the number of assignments struggling in a course
+     */
+    public $struggling = 0.0;
+    /**
+     * @var float the number of assignments struggling in a course
+     */
+    public $notstarted = 0.0;
+    /**
      * @var float the number of assignments that are expected
      * to be completed in a course by a given date
      */
@@ -1022,14 +1080,25 @@ class flexdates_course{
                 $lessondurations->$item_id = new stdClass;
                 $lessondurations->$item_id->duration = $assignment->duration;
                 $this->num_assign ++;
-                if($grades->mastered){
+                if($grades->masterylevel != 'notstarted'){
                     $this->completed ++;
-                    $this->mastered ++;
+                    if($grades->masterylevel == 'mastered'){
+                        $this->mastered ++;
+                    } elseif($grades->masterylevel == 'level2'){
+                        $this->level2 ++;
+                    } elseif($grades->masterylevel == 'level1'){
+                        $this->level1 ++;
+                    } elseif($grades->masterylevel == 'practiced'){
+                        $this->practiced ++;
+                    } elseif($grades->masterylevel == 'struggling'){
+                        $this->struggling ++;
+                    }
                     $lessondurations->$item_id->notsubmitted = false;
                 } else if($grades->datesubmitted or $grades->dategraded){
                     $this->completed ++;
                     $lessondurations->$item_id->notsubmitted = false;
                 } else{
+                    $this->notstarted ++;
                     $lessondurations->$item_id->notsubmitted = true;
                 }
                 if($grades->duedate < $today->getTimestamp()){
@@ -1045,7 +1114,7 @@ class flexdates_course{
             //print_object($sem_length);
             $this->projected_completion_date = flexdates_get_projected_completion_date($lessondurations,$sem_length,$excluded_dates=array());
             $this->completion_date = DateTime::createFromFormat('U', $completion_record->completiondate);
-            $this->date_diff = $this->projected_completion_date->getTimestamp()-$this->completion_date->getTimestamp();
+            $this->date_diff = $this->projected_completion_date->getTimestamp() - $this->completion_date->getTimestamp();
         } else{
             $this->completion_date = null;
             $this->projected_completion_date = null;
