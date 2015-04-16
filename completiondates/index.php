@@ -57,13 +57,13 @@ if ($mform->is_cancelled()) {
         $enroled_user = explode('--',$key);
         if($enroled_user[0] == 'student'){
             if(!$record = $DB->get_record('local_fd_completion_dates',array('userid'=>$enroled_user[1],'courseid'=>$id))){
-                $sql = "SELECT mdl_user_enrolments.timestart 
-                        FROM mdl_user_enrolments 
-                        INNER JOIN mdl_enrol 
-                        ON mdl_enrol.id=mdl_user_enrolments.enrolid 
-                        WHERE mdl_enrol.enrol = 'manual'
-                        AND mdl_enrol.courseid = {$id}
-                        AND mdl_user_enrolments.userid = {$enroled_user[1]};";
+                $sql = "SELECT ue.timestart
+                          FROM {$CFG->prefix}user_enrolments ue
+                    INNER JOIN {$CFG->prefix}enrol e
+                               ON e.id=ue.enrolid
+                         WHERE (e.enrol = 'manual' OR e.enrol = 'mnet')
+                           AND e.courseid = {$id}
+                           AND ue.userid = {$enroled_user[1]};";
                 $enrol_record = $DB->get_record_sql($sql, array(), $strictness=MUST_EXIST);
                 $dataobject = new stdClass;
                 $dataobject->userid = $enroled_user[1];

@@ -216,7 +216,7 @@ function flexdates_get_student_grades($courseid, $userid) {
                 $grade->usermodified   = $grade_grades[$userid]->usermodified;
                 $grade->datesubmitted  = $grade_grades[$userid]->get_datesubmitted();
                 $grade->dategraded     = $grade_grades[$userid]->get_dategraded();
-                $grade->masterylevel   = ($grade_item->grademax && $grade_item->gradetype) ? flexdates_get_mastery_level($courseid,$grade_grades[$userid]->finalgrade/$grade_item->grademax) : 'notstarted';
+                $grade->masterylevel   = ((float)($grade_item->grademax) && $grade_item->gradetype) ? flexdates_get_mastery_level($courseid,$grade_grades[$userid]->finalgrade/$grade_item->grademax) : 'notstarted';
                 if ($duedate = $DB->get_record('local_fd_student_due_dates',array('userid'=>$userid,'gradeitemid'=>$grade_item->id))){
                     $grade->duedate    = $duedate->duedate;
                 } else{
