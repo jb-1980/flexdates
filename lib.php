@@ -12,7 +12,7 @@ require_once($CFG->libdir . '/grade/grade_outcome.php');
 require_once($CFG->libdir . '/gradelib.php');
 
 
-function local_flexdates_extends_navigation(global_navigation $navigation){
+function local_flexdates_extend_navigation(global_navigation $navigation){
     global $CFG;
     // TODO Put permissions on these so they do not appear for everyone
     $navigation->add('Student Dashboard', new moodle_url($CFG->wwwroot.'/local/flexdates/student.php'), navigation_node::TYPE_CONTAINER);
@@ -28,7 +28,7 @@ function local_flexdates_extends_navigation(global_navigation $navigation){
  * @param stdClass $course The course to object for the report
  * @param stdClass $context The context of the course
  */
-function local_flexdates_extends_settings_navigation(settings_navigation $navigation, context $context){
+function local_flexdates_extend_settings_navigation(settings_navigation $navigation, context $context){
     global $CFG,$PAGE;
     if($PAGE->course->id > 1){
         if(has_capability('local/flexdates:modify', $PAGE->context)){
@@ -222,11 +222,11 @@ function flexdates_get_student_grades($courseid, $userid) {
                 } else{
                     $grade->duedate    = 0;
                 }
-
                 // create text representation of grade
                 if ($grade_item->gradetype == GRADE_TYPE_TEXT){
-                    $grade->grade          = null;
-                    $grade->str_grade      = '-';
+#                    $grade->grade          = null;
+#                    $grade->str_grade      = '-';
+                    $grade->str_grade = grade_format_gradevalue($grade->grade, $grade_item, true,GRADE_DISPLAY_TYPE_LETTER);
                     $grade->str_long_grade = $grade->str_grade;
 
                 } else if (in_array($grade_item->id, $needsupdate)){
@@ -239,17 +239,18 @@ function flexdates_get_student_grades($courseid, $userid) {
                     $grade->str_long_grade = $grade->str_grade;
 
                 } else if ($item->itemtype == 'course'){
-                    $grade->str_grade = grade_format_gradevalue($grade->grade, $grade_item, true,GRADE_DISPLAY_TYPE_LETTER);
+                    $v = $grade_grades[$userid]->finalgrade/$grade_grades[$userid]->rawgrademax;
+                    $grade->str_grade = grade_format_gradevalue($v*$grade_item->grademax, $grade_item, true,GRADE_DISPLAY_TYPE_LETTER);
                     $grade->str_long_grade = $grade->str_grade;
                 } else{
-                    $grade->str_grade = grade_format_gradevalue($grade->grade, $grade_item);
+                    $grade->str_grade = grade_format_gradevalue($grade->grade, $grade_item, true,GRADE_DISPLAY_TYPE_LETTER);
                     if ($grade_item->gradetype == GRADE_TYPE_SCALE or $grade_item->get_displaytype() != GRADE_DISPLAY_TYPE_REAL) {
                         $grade->str_long_grade = $grade->str_grade;
                     } else {
                         $a = new stdClass();
                         $a->grade = $grade->str_grade;
                         $a->max   = grade_format_gradevalue($grade_item->grademax, $grade_item);
-                        $grade->str_long_grade = get_string('gradelong', 'grades', $a);
+                        $grade->str_long_grade = round($grade->grade).'/'. $grade_item->grademax;
                     }
                 }
 
@@ -769,7 +770,7 @@ function flexdates_calculate_student_due_dates($lessondurations,$courseid,$useri
     foreach($lessondurations as $key=>$course_module){
         $gradeitemid = $course_module->gradeitemid;
         $iter_date += $course_module->duration;
-        $due_date = round((count($class_days)-1)*($iter_date)/$total_time);
+        $due_date = $total_time ? round((count($class_days)-1)*($iter_date)/$total_time) : 1;
         $user->duedates->$gradeitemid = $class_days[(int)$due_date];
     }
     return $user;

@@ -32,14 +32,14 @@ $PAGE->set_context($context);
 $PAGE->set_url('/local/flexdates/student.php');
 $output = $PAGE->get_renderer('local_flexdates');
 $PAGE->requires->css('/local/flexdates/static/css/datepicker3.css');
-$PAGE->requires->jquery();
+//$PAGE->requires->jquery();
 
 echo $output->header();
 
 global $USER;
 echo $output->render_student_dashboard($USER->id);
 $scripts = array(
-  'static/js/bootstrap.min.js',
+  //'static/js/bootstrap.min.js',
   'static/js/bootstrap-datepicker.js',
   'static/js/flexdates-datepicker.js',
   'static/js/flexdates-assignments.js'

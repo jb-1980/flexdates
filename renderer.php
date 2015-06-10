@@ -86,6 +86,7 @@ class local_flexdates_renderer extends plugin_renderer_base {
             $dashtab_content = $this->render_dashboard_tabpane('This is where the announcements go!',$dash_tab_data,$dashtab_assignments,$courses->resources);
         $tab_content.= "<div class='tab-pane active' id='flexdates'>{$dashtab_content}</div>";
         $container_content.= $this->render_tab_content($tab_content);
+        $container_content.= $this->render_customdates_modal();
         return $this->render_container_fluid($container_content);
     }
     
@@ -715,7 +716,7 @@ class local_flexdates_renderer extends plugin_renderer_base {
      */
     private function assignment_row_state($value){
         if($value->grades->str_grade != '-'){
-              if($value->grades->mastered){
+              if($value->grades->masterylevel == 'mastered'){
                   return 'info';
               } else{
                   return 'success';
