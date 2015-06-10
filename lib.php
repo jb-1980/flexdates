@@ -12,7 +12,7 @@ require_once($CFG->libdir . '/grade/grade_outcome.php');
 require_once($CFG->libdir . '/gradelib.php');
 
 
-function local_flexdates_extends_navigation(global_navigation $navigation){
+function local_flexdates_extend_navigation(global_navigation $navigation){
     global $CFG;
     // TODO Put permissions on these so they do not appear for everyone
     $navigation->add('Student Dashboard', new moodle_url($CFG->wwwroot.'/local/flexdates/student.php'), navigation_node::TYPE_CONTAINER);
@@ -28,7 +28,7 @@ function local_flexdates_extends_navigation(global_navigation $navigation){
  * @param stdClass $course The course to object for the report
  * @param stdClass $context The context of the course
  */
-function local_flexdates_extends_settings_navigation(settings_navigation $navigation, context $context){
+function local_flexdates_extend_settings_navigation(settings_navigation $navigation, context $context){
     global $CFG,$PAGE;
     if($PAGE->course->id > 1){
         if(has_capability('local/flexdates:modify', $PAGE->context)){
