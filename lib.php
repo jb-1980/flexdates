@@ -606,7 +606,7 @@ function flexdates_get_raw_grade($courseid,$grade_items){
  * @param int $startdate the beginning date in unix timestamp
  * @param int $enddate the ending date in unix timestamp
  * @param array $excluded_dates array of dates not to include in count
- * @return array of available dates as unix timestamps
+ * @return array of available dates as unix timestamps at midnight of date
  */
 function flexdates_get_available_due_dates($startdate, $enddate, $excluded_dates){
     $start = DateTime::createFromFormat('U', $startdate);
@@ -620,9 +620,11 @@ function flexdates_get_available_due_dates($startdate, $enddate, $excluded_dates
     
     // Create a bucket of days with day[0] = today, day[1]=next school day, etc.
     foreach($dates as $day){
-        if(!in_array($day,$excluded_dates)){
+        // floor date to midnight to ensure it will match $excluded_dates timestamps
+        $day_timestamp = $day->getTimestamp() - ($day->getTimestamp() % 86400); 
+        if(!in_array($day_timestamp,$excluded_dates)){
             if($day->format("N") < 6) { /* weekday */
-                $days[] = $day->getTimestamp();
+                $days[] = $day_timestamp;
             }
         }
     }
@@ -644,7 +646,9 @@ function flexdates_get_days_in_course($startdate,$excluded_dates = array()){
     $dates = new DatePeriod($start, $oneday, $today);
     $counter = 0;
     foreach($dates as $day) {
-        if(!in_array($day,$excluded_dates)){
+        // floor date to midnight to ensure it will match $excluded_dates timestamps
+        $day_timestamp = $day->getTimestamp() - ($day->getTimestamp() % 86400); 
+        if(!in_array($day_timestamp,$excluded_dates)){
             if($day->format("N") < 6) { /* weekday */
                 $counter ++;
             }
@@ -653,6 +657,15 @@ function flexdates_get_days_in_course($startdate,$excluded_dates = array()){
     return $counter;
 }
 
+
+/**
+ * Find the length of a student's semester in school days
+ * @param int $startdate unix timestamp, date student enroled in course;
+ * @param int $enddate unix timestamp, date student should complete course
+ * @param array $excluded_dates array of unix timestamps for non-school dates (vacations,
+ *                              holidays, teacher training, etc.)
+ * @return int
+ */
 function flexdates_get_days_in_semester($startdate,$enddate,$excluded_dates = array()){
     $start = DateTime::createFromFormat('U', $startdate);
     $end = DateTime::createFromFormat('U', $enddate);
@@ -662,18 +675,18 @@ function flexdates_get_days_in_semester($startdate,$enddate,$excluded_dates = ar
     We add one day to the $end date, because the DatePeriod only iterates up to,
     not including, the end date. */
     $dates = new DatePeriod($start, $oneday, $end->add($oneday));
-    //print_object($dates);
+
     $counter = 0;
     foreach($dates as $day) {
-        //print_object($day);
-        if(!in_array($day->getTimestamp(),$excluded_dates)){
-            //echo 'In array<br/>';
+        // floor date to midnight to ensure it will match $excluded_dates timestamps
+        $day_timestamp = $day->getTimestamp() - ($day->getTimestamp() % 86400); 
+        if(!in_array($day_timestamp,$excluded_dates)){
             if($day->format("N") < 6) { /* weekday */
                 $counter ++;
             }
         }
     }
-    //print_object($days);
+
     return $counter;
 }
 
@@ -799,7 +812,7 @@ function flexdates_update_student_due_dates($userid,$courseid,$lessondurations,$
 
 /**
  * determine how far behind or ahead student is and return correct styling properties
- * this is used with flexdates_make_svg to style the %expected circle
+ * this is used with flexdates_make_svg to style the expected circle
  */
 function flexdates_find_amount_behind($percomplete,$perexpected){
     if($percomplete == 0 and $perexpected == 0){
